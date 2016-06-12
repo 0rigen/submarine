@@ -1,0 +1,14 @@
+1) Use VirusTotal API to search for subdomains
+2) Inspect certificate for other names
+3) Use subbrute.py to brute force it
+4) Use DNSRecon to find subs
+5) Save output to a file for now
+
+
+
+It looks like running enumall.sh will create a timestampe (down to the day) resource file for recon-ng.
+I should auto-run my sub enumeration every 25 hours or so and diff the resulting data.
+Any differences that are observed should trigger an e-mail to me to let me know what was found.
+
+I'll then need to follow that up witha  cronjob to move the resource file into a storage location, since they
+are automatically created within the pwd of my script.  Let's not let it get too messy...
