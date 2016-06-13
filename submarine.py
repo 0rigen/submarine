@@ -54,7 +54,8 @@ def main():
 
 def enumall(target):
     # The call...
-    subprocess.call(["/root/Code/submarine/enumall.sh", target])
+    enum_p = subprocess.Popen(["/root/Code/submarine/enumall.sh", target])
+    enum_p.communicate()
 
     # Begin file processing by grabbing the new output
     os.chdir(target)  # Change PWD to the target directory
@@ -75,15 +76,16 @@ def enumall(target):
         print("The latest file is %s from %s" % (f, latest))
         f1 = files[0]
         f2 = files[1]
-        cmd = "diff %s %s -yBw | grep ">" | sort -u" % (f1, f2)
-        diff_out = subprocess.getoutput(cmd, shell=True)
+        cmd = "diff %s %s -yBw | grep '>' | sort -u" % (f1, f2)
+        diff_out = subprocess.getoutput(cmd)
         if diff_out:
-            print("There's a diff - notify someone")
+            print("There's are new entries!")
+            # Call the shell to cat the old file into the new file, then cat and sort -u into a merged result
         elif not diff_out:
-            print("No difference; how boring!")
+            print("No new entires... how boring!")
 
     elif len(files) == 1:
-        print("One file found - inspect it")
+        print("One file found - Either you're re-running this too soon, or this is a new target.")
 
     else:
         print("There appears to be more than 2 enumall output files.  That shouldn't happen - please check it out.")
@@ -91,13 +93,35 @@ def enumall(target):
 
 def subbrute(target):
     if not os.path.isfile("/opt/SubBrute/subbrute.py"):
-        # TODO: Offer to install if not found at /opt/
-        # TODO: Offer to let user define custom location (low priority)
         print("Subbrute.py not found, skipping.")
     else:
-        subbrute_out = subprocess.getoutput("python /opt/SubBrute/subbrute.py %s" % target)
-        print(subbrute_out)
+        print("Beginning subbrute method...This'll take awhile")
+        the_log =("/root/Code/submarine/%s/subbrute_log.txt" % target)
+        with open(the_log, 'w') as f:
+            brute_p = subprocess.Popen(["nohup","python", "/opt/SubBrute/subbrute.py", target], stdout=f,stderr=subprocess.STDOUT)
 
+            # Poll process for new output until finished
+            '''
+            In py3, the return type of a process stdout is now byte instead of str, so I need
+            to decode it into utf-8 in order to write it.  Also, changed the next_line == '' to
+            next_line == b'' in order to check for the byte output that is the new standard in py3.
+            '''
+            '''
+            while True:
+                next_line = brute_p.stdout.readline()
+                if next_line == b'' and brute_p.poll() is not None:
+                    break
+                sys.stdout.write(next_line.decode('utf-8'))
+                sys.stdout.flush()
+
+            output = brute_p.communicate()[0]
+            exitCode = brute_p.returncode
+
+            if (exitCode == 0):
+                return output
+            else:
+                raise ProcessException(exitCode, output)
+'''
 
 if __name__ == "__main__":
     main()
