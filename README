@@ -1,8 +1,13 @@
 Remove my sub directories (yahoo.com, etc)
-At end of execution (end of main) remove the .resource files from the main directory.
 
 
-2) Inspect certificate for other names
+Immediate To Do:
+1) Inspect certificate for other names
+2) At end of execution (end of main) remove the .resource files from the main directory
+3) Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
+
+
+
 
 4) Use DNSRecon to find subs
 
