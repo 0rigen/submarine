@@ -41,6 +41,8 @@ import sys
 import requests
 import urllib.parse
 import urllib.request
+from termcolor import colored
+
 
 __author__ = "C. Joel Parsons (aka; 0rigen)"
 __copyright__ = "Copyright 2007, The Cogent Project"
@@ -50,6 +52,17 @@ __version__ = "3.0"
 __maintainer__ = "0rigen"
 __email__ = "0rigen@0rigen.net"
 __status__ = "Prototype"
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def findFile(target):
@@ -90,6 +103,7 @@ def updateMaster(new_file, target):
     master_cmd = "cat %s | sort -u >> %s/%s" % (new_file, target, master_file)  # Append into the master
     subprocess.call(master_cmd, shell=True)
     # TODO: Filter out duplicates, ensure unique entries only
+    print("[*] Master List Updated for %s" % target)
 
 
 def main():
@@ -116,9 +130,9 @@ def main():
     ##########################
     # Begin domain finding
     ##########################
-    enumall(target)
+    #enumall(target)
     virusTotal(target)
-    # subbrute(target)
+    subbrute(target)
 
 
 def enumall(target):
@@ -133,8 +147,7 @@ def enumall(target):
     enum_p.communicate()
 
     # Begin file processing by grabbing the new output
-    os.chdir(target)  # Change PWD to the target directory
-    cmd = ("mv /usr/share/recon-ng/*.lst .")  # Just build the command...
+    cmd = ("mv /usr/share/recon-ng/*.lst %s/" % target)  # Just build the command...
     subprocess.call(cmd, shell=True)  # Move any new .lst files into current directory
     files = findFile(target)  # Get all target-relevant .lst files
 
@@ -196,10 +209,19 @@ def subbrute(target):
         print("[!] Subbrute.py not found, skipping.")
     else:
         print("[*] Beginning subbrute method...This'll take awhile")
+
         the_log = ("%s/subbrute_log.txt" % target)
+
+        i = 0
         with open(the_log, 'w') as f:
-            brute_p = subprocess.Popen(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f,
-                                       stderr=subprocess.STDOUT)
+            brute_p = subprocess.call(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f, stderr=subprocess.STDOUT)
+            brute_p.communicate()
+
+        with open(the_log, 'r') as f:  # Count the resulting discoveries
+            for line in f:
+                i += 1
+
+        print("[*] Discovered %d subdomains through subbrute.py" % i)
         # After it completes, update the master file
         updateMaster(the_log, target)
 
@@ -215,6 +237,7 @@ def virusTotal(target):
     :return: None
     '''
     # Get API key
+    key = ""
     try:
         keyFile = open('virus_total.key', 'r')
         key = keyFile.readline().rstrip()
@@ -227,20 +250,22 @@ def virusTotal(target):
     parameters = {"domain": target, "apikey": key}  # API Paramater construction
     response = requests.get('%s?%s' % (url, urllib.parse.urlencode(parameters))).json()  # Read the response
 
-    # Access and save the "subdomains" field
+    # Access and save the "subdomains" field, that's all we want
     subs = response['subdomains']
 
     the_log = ("%s/virustotal_log.txt" % target)
 
-    if not os.path.isfile("virustotal_log.txt"):  # If the log doesn't exist... create it
+    if not os.path.isfile("%s/virustotal_log.txt"):  # If the log doesn't exist... create it
         subprocess.call(["touch", the_log])
 
-    # Write the subs to the file log
+    # Write the subs to the file logi
+    i = 0
     with open(the_log, 'w') as f:
         for item in subs:
             f.write(item)
+            i += 1
             f.write("\n")
-
+    print("[*] %d subdomains discovered through VirusTotal API" % i)
     # Add anything we discovered to the master list
     updateMaster(the_log, target)
 
