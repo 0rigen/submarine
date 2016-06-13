@@ -26,9 +26,9 @@
     Techniques Implemented So Far:
      - enumall.sh (jhaddix) / recon-ng (LaNMaSteR53)
      - subbrute.py (TheRook)
+     - VirusTotal API
 
     Techniques To Be Added:
-    * VirusTotal API Scan
     * Certificate Inspection
     * DNSRecon
 
@@ -83,11 +83,11 @@ def updateMaster(new_file, target):
 
     master_file = ("%s_master.txt" % target)
 
-    if not os.path.isfile(master_file):  # If there is no master list, create one
-        create_master_cmd = ("touch %s_master.txt" % target)
+    if not os.path.isfile(target + "/" + master_file):  # If there is no master list, create one
+        create_master_cmd = ("touch %s/%s_master.txt" % (target, target))
         subprocess.Popen(create_master_cmd, shell=True)
 
-    master_cmd = "cat %s | sort -u >> %s" % (new_file, master_file)  # Append into the master
+    master_cmd = "cat %s | sort -u >> %s/%s" % (new_file, target, master_file)  # Append into the master
     subprocess.call(master_cmd, shell=True)
     # TODO: Filter out duplicates, ensure unique entries only
 
@@ -96,27 +96,27 @@ def main():
     # Resolve command line target
     try:
         target = sys.argv[1]
-        print("Targeting %s" % target)
+        print("[+] Targeting %s" % target)
     except:
-        print("I couldn't understand the target!")
+        print("[!] I couldn't understand the target!")
         sys.exit(1)
 
     # Check to see if a folder already exists for that target
     if os.path.exists("%s/" % target):  # It does
-        print("I already have data for this target; files will be updated.")
+        print("[+] I already have data for this target; files will be updated.")
     else:  # It doesn't
-        print("New Target!  Creating a home for the data...")
+        print("[+] New Target!  Creating a home for the data...")
         try:
             subprocess.call(["mkdir", target])  # Create it
             # TODO: Create master subs file
         except:
-            print("Something went wrong creating the directory.  Permissions?")
+            print("[!] Something went wrong creating the directory.  Permissions?")
             sys.exit(1)
 
     ##########################
     # Begin domain finding
     ##########################
-    # enumall(target)
+    enumall(target)
     virusTotal(target)
     # subbrute(target)
 
@@ -129,8 +129,8 @@ def enumall(target):
     :return: None
     '''
     # The call...
-    # enum_p = subprocess.Popen(["/root/Code/submarine/enumall.sh", target])
-    # enum_p.communicate()
+    enum_p = subprocess.Popen(["./enumall.sh", target])
+    enum_p.communicate()
 
     # Begin file processing by grabbing the new output
     os.chdir(target)  # Change PWD to the target directory
@@ -141,14 +141,13 @@ def enumall(target):
     latest = 1465820000.0  # Establish a base time for comparison.  Arbitrary old time.
 
     if not files:  # Nothing to process
-        print("New new enumall output files to process...That's odd.")
+        print("[!] No new enumall output files to process...That's odd.")
 
     elif len(files) == 2:  # Multiple files exist
         for f in files:
             f_time = os.path.getctime(f)  # Get timestamp of file
             if f_time > latest:  # Check if file was created AFTER the current latest
                 latest = f_time
-        print("The latest file is %s from %s" % (f, latest))
 
         f1 = files[0]
         f2 = files[1]
@@ -157,7 +156,7 @@ def enumall(target):
         diff_out = subprocess.getoutput(cmd)
 
         if diff_out:
-            print("There are new entries!")
+            print("[+] There are new entries!")
 
             merge_cmd = ("cat %s >> %s" % (files[0], files[1]))
             merge_p = subprocess.Popen(merge_cmd, shell=True)  # Create single appended file
@@ -165,24 +164,24 @@ def enumall(target):
             updateMaster(files[1], target)  # Update the master file
 
         elif not diff_out:
-            print("No new entries... how boring!")
+            print("[+] No new entries... how boring!")
             # I'm not going to call updateMaster and attempt any updates unless there was a change
             # in the enumall output itself.  Why bother?
 
     elif len(files) == 1:
-        print("One file found - Either you're re-running this too soon, or this is a new target.")
+        print("[+] One file found - Either you're re-running this too soon, or this is a new target.")
         updateMaster(files[0],
                      target)  # Send the single file to updateMaster in order to create the Master from this source
 
     else:
-        print("There appears to be more than 2 enumall output files.  That shouldn't happen - please check it out.")
+        print("[!] There appears to be more than 2 enumall output files.  That shouldn't happen - please check it out.")
 
     # Processing complete.  No matter what happened, we have all the data in a master file now,
     # so let's delete the oldest .lst file - it's not necessary any more.
     try:
         subprocess.call(["rm", files[0]])
     except:
-        print("Unable to remove old .lst file - please get rid of that or it'll bork me up!")
+        print("[!] Unable to remove old .lst file - please get rid of that or it'll bork me up!")
 
 
 def subbrute(target):
@@ -194,13 +193,13 @@ def subbrute(target):
     :return: None
     '''
     if not os.path.isfile("/opt/SubBrute/subbrute.py"):
-        print("Subbrute.py not found, skipping.")
+        print("[!] Subbrute.py not found, skipping.")
     else:
-        print("Beginning subbrute method...This'll take awhile")
-        the_log = ("/root/Code/submarine/%s/subbrute_log.txt" % target)
-        # with open(the_log, 'w') as f:
-        #    brute_p = subprocess.Popen(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f,
-        #                              stderr=subprocess.STDOUT)
+        print("[*] Beginning subbrute method...This'll take awhile")
+        the_log = ("%s/subbrute_log.txt" % target)
+        with open(the_log, 'w') as f:
+            brute_p = subprocess.Popen(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f,
+                                       stderr=subprocess.STDOUT)
         # After it completes, update the master file
         updateMaster(the_log, target)
 
@@ -231,7 +230,7 @@ def virusTotal(target):
     # Access and save the "subdomains" field
     subs = response['subdomains']
 
-    the_log = ("%s/virtustotal_log.txt" % target)
+    the_log = ("%s/virustotal_log.txt" % target)
 
     if not os.path.isfile("virustotal_log.txt"):  # If the log doesn't exist... create it
         subprocess.call(["touch", the_log])
