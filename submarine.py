@@ -99,7 +99,7 @@ def updateMaster(new_file, target):
         create_master_cmd = ("touch %s/%s_master.txt" % (target, target))
         subprocess.Popen(create_master_cmd, shell=True)
 
-    master_cmd = "cat %s | sort -u >> %s/%s" % (new_file, target, master_file)  # Append into the master
+    master_cmd = "cat %s/%s | sort -u >> %s/%s" % (target, new_file, target, master_file)  # Append into the master
     subprocess.call(master_cmd, shell=True)
     # TODO: Filter out duplicates, ensure unique entries only
     print("[*] Master List Updated for %s" % target)
@@ -121,7 +121,6 @@ def main():
         print("[+] New Target!  Creating a home for the data...")
         try:
             subprocess.call(["mkdir", target])  # Create it
-            # TODO: Create master subs file
         except:
             print("[!] Something went wrong creating the directory.  Permissions?")
             sys.exit(1)
@@ -130,10 +129,11 @@ def main():
     # Begin domain finding
     ##########################
     enumall(target)
-    virusTotal(target)
-    subbrute(target)
+    #virusTotal(target)
+    #subbrute(target)
 
-    subprocess.call(["rm","*.resource"])
+
+    subprocess.call("rm *.resource", shell=True)
     print("[+] Resource Files Removed.  Operations Complete.  Enjoy!")
 
 
@@ -195,8 +195,9 @@ def enumall(target):
     # Processing complete.  No matter what happened, we have all the data in a master file now,
     # so let's delete the oldest .lst file - it's not necessary any more.
     try:
-        rm_cmd=("rm %s/%s" % (target, files[0]))
-        subprocess.call(rm_cmd, shell=True)
+        if len(files)==2:
+            rm_cmd=("rm %s/%s" % (target, files[0]))
+            subprocess.call(rm_cmd, shell=True)
     except:
         print("[!] Unable to remove old .lst file - please get rid of that or it'll bork me up!")
 
