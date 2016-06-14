@@ -1,12 +1,18 @@
-1) Use VirusTotal API to search for subdomains
-2) Inspect certificate for other names
-3) Use subbrute.py to brute force it
+Remove my sub directories (yahoo.com, etc)
+
+
+Immediate To Do:
+1) Inspect certificate for other names
+2) At end of execution (end of main) remove the .resource files from the main directory
+3) Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
+
+
+
+
 4) Use DNSRecon to find subs
-5) Save output to a file for now
 
 
 
-It looks like running enumall.sh will create a timestampe (down to the day) resource file for recon-ng.
 I should auto-run my sub enumeration every 25 hours or so and diff the resulting data.
 Any differences that are observed should trigger an e-mail to me to let me know what was found.
 

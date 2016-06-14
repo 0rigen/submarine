@@ -45,7 +45,6 @@ import urllib.request
 
 
 __author__ = "C. Joel Parsons (aka; 0rigen)"
-__copyright__ = "Copyright 2007, The Cogent Project"
 
 __license__ = "GPL"
 __version__ = "3.0"
