@@ -41,7 +41,7 @@ import sys
 import requests
 import urllib.parse
 import urllib.request
-from termcolor import colored
+#from termcolor import colored
 
 
 __author__ = "C. Joel Parsons (aka; 0rigen)"
@@ -75,7 +75,7 @@ def findFile(target):
     '''
     target_files = []
 
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk('%s/' % target):
         for file in files:
             name = os.path.basename(file)
             if target in name:  # Found a file for my target
@@ -130,9 +130,12 @@ def main():
     ##########################
     # Begin domain finding
     ##########################
-    #enumall(target)
+    enumall(target)
     virusTotal(target)
     subbrute(target)
+
+    subprocess.call(["rm","*.resource"])
+    print("[+] Resource Files Removed.  Operations Complete.  Enjoy!")
 
 
 def enumall(target):
@@ -158,7 +161,8 @@ def enumall(target):
 
     elif len(files) == 2:  # Multiple files exist
         for f in files:
-            f_time = os.path.getctime(f)  # Get timestamp of file
+            file_path = ("%s/%s" % (target,f))
+            f_time = os.path.getctime(file_path)  # Get timestamp of file
             if f_time > latest:  # Check if file was created AFTER the current latest
                 latest = f_time
 
@@ -171,7 +175,7 @@ def enumall(target):
         if diff_out:
             print("[+] There are new entries!")
 
-            merge_cmd = ("cat %s >> %s" % (files[0], files[1]))
+            merge_cmd = ("cat %s/%s >> %s" % (target, files[0], files[1]))
             merge_p = subprocess.Popen(merge_cmd, shell=True)  # Create single appended file
             merge_p.communicate()
             updateMaster(files[1], target)  # Update the master file
@@ -192,7 +196,8 @@ def enumall(target):
     # Processing complete.  No matter what happened, we have all the data in a master file now,
     # so let's delete the oldest .lst file - it's not necessary any more.
     try:
-        subprocess.call(["rm", files[0]])
+        rm_cmd=("rm %s/%s" % (target, files[0]))
+        subprocess.call(rm_cmd, shell=True)
     except:
         print("[!] Unable to remove old .lst file - please get rid of that or it'll bork me up!")
 
@@ -215,7 +220,7 @@ def subbrute(target):
         i = 0
         with open(the_log, 'w') as f:
             brute_p = subprocess.call(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f, stderr=subprocess.STDOUT)
-            brute_p.communicate()
+            #brute_p.communicate()
 
         with open(the_log, 'r') as f:  # Count the resulting discoveries
             for line in f:

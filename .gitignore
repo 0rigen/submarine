@@ -95,3 +95,5 @@ ENV/
 virus_total.key
 yahoo.com/yahoo.com_master.txt
 /virus_total.key
+# Ignore my own processing test files
+/**
