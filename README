@@ -1,20 +1,39 @@
-Remove my sub directories (yahoo.com, etc)
+v1.0
+               ___|          |                             _)
+             \___ \   |   |  __ \   __ `__ \    _` |   __|  |  __ \    _ \
+                   |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
+             _____/  \__,_| _.__/  _|  _|  _| \__,_| _|    _| _|  _| \___|
 
+Submarine is simply an aggregator for common subdomain enumeration techniques.  In the spirit of automating the more tedious work, this
+script will automatically perform several techniques and aggregate all discovered subdomains into a master list, organized by
+target domain.  Note that none of the techniques are my own, this script just pulls them together for tracking/analysis.
 
-Immediate To Do:
-1) Inspect certificate for other names
-2) At end of execution (end of main) remove the .resource files from the main directory
-3) Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
+    Techniques Implemented So Far:
+     - enumall.sh (jhaddix) / recon-ng (LaNMaSteR53)
+     - subbrute.py (TheRook)
+     - VirusTotal API Call
+     - SSL Certificate Inspection for Alt. Names (thx to ‎@bbuerhaus for help with this)
 
+This script is best run on a recurring basis to discover changes to the master list.  Recommended implementation is a cronjob that will automatically
+e-mail you or otherwise log when a new subdomain shows up.
+             
+Near-term To Do:
+- Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
 
+    Usage Example:
+        python3 submarine.py -t yahoo.com -a
 
+Each target will have its data stored in a directory by that domain's name.  These directories are
+created as sub-directories to wherever this script lives.  A master list of subdomains is maintained
+in a file called "[target]_master.txt" within that directory, along with other working files.
 
-4) Use DNSRecon to find subs
-
-
-
-I should auto-run my sub enumeration every 25 hours or so and diff the resulting data.
-Any differences that are observed should trigger an e-mail to me to let me know what was found.
-
-I'll then need to follow that up witha  cronjob to move the resource file into a storage location, since they
-are automatically created within the pwd of my script.  Let's not let it get too messy...
+    Directory Structure:
+    submarine.py
+        |__ yahoo.com
+                |___ yahoo.com_master.txt
+                |___ workingfile
+                |___ workingfile
+        |__ google.com
+                |___ google.com_master.txt
+                |___ workingfile
+                |___ workingfile
