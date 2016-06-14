@@ -17,10 +17,19 @@ target domain.  Note that none of the techniques are my own, this script just pu
 This script is best run on a recurring basis to discover changes to the master list.  Recommended implementation is a cronjob that will automatically
 e-mail you or otherwise log when a new subdomain shows up.
              
-Near-term To Do:
-- Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
+Usage: submarine.py [-h] [-t TARGET] [-e] [-s] [-c] [-v] [-a]
 
-    Usage Example:
+optional arguments:
+  -h, --help            show this help message and exit
+  -t TARGET, --target TARGET
+                        The target domain
+  -e                    Perform enumall.sh enumeration via recon-ng
+  -s                    Perform SubBrute.py enumeration
+  -c                    Perform SSL Certificate Alt. name enumeration
+  -v                    Perform VirusTotal API Enumeration
+  -a                    Perform ALL checks.
+  
+  Usage Example:
         python3 submarine.py -t yahoo.com -a
 
 Each target will have its data stored in a directory by that domain's name.  These directories are
@@ -37,3 +46,7 @@ in a file called "[target]_master.txt" within that directory, along with other w
                 |___ google.com_master.txt
                 |___ workingfile
                 |___ workingfile
+
+
+Near-term To Do:
+- Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
