@@ -188,6 +188,7 @@ def main():
             alt_names.append(getCertAltNames(ip))
 
         # Put alt names into temp file and then merge into the Master
+        # TODO: This should really move to the getSubAltName() function to keep organized by functionality
         subprocess.call("touch temp.txt", shell=True)
         with open('temp.txt', 'w') as f:
             for item in alt_names:
@@ -384,7 +385,7 @@ def getCertAltNames(ipAddr, port=443):
 
         # try to save all cn/alt names
         try:
-            alt = get_subj_alt_name(cert)
+            alt = getSubAltName(cert)
             print(colors.OKBLUE + ("[*] Found alt names in cert for %d" % ipAddr) + colors.ENDC)
             return alt
         except:
@@ -397,7 +398,7 @@ def getCertAltNames(ipAddr, port=443):
         return False
 
 
-def get_subj_alt_name(peer_cert):
+def getSubAltName(peer_cert):
     '''
     Performs inspection of the SSL cert
 
@@ -406,14 +407,15 @@ def get_subj_alt_name(peer_cert):
     '''
     dns_name = []
     general_names = SubjectAltName()
-    for i in range(peer_cert.get_extension_count()):
-        ext = peer_cert.get_extension(i)
-        ext_name = ext.get_short_name()
-        if ext_name == "subjectAltName":
-            ext_dat = ext.get_data()
-            decoded_dat = der_decoder.decode(ext_dat, asn1Spec=general_names)
 
-            for name in decoded_dat:
+    for i in range(peer_cert.get_extension_count()):
+        extension = peer_cert.get_extension(i)
+        extension_name = extension.get_short_name()
+        if extension_name == "subjectAltName":
+            extension_data = extension.get_data()
+            decoded_data = der_decoder.decode(extension_data, asn1Spec=general_names)
+
+            for name in decoded_data:
                 if isinstance(name, SubjectAltName):
                     for entry in range(len(name)):
                         component = name.getComponentByPosition(entry)
