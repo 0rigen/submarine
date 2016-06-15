@@ -120,13 +120,13 @@ def main():
     color = bcolors
 
     # Check that I have the permissions to run (I should be sudo'd or root'd)
-    '''if os.access("/usr/share/recon-ng/", os.W_OK):
+    if os.access("/usr/share/recon-ng/", os.W_OK):
         print(color.OKGREEN + "[+] recon-ng found and accessible." + color.ENDC)
     else:
         print(
             color.FAIL + "[!] You don't have sufficient permissions to run this script OR recon-ng is not installed at /usr/share/recon-ng." + color.ENDC)
         sys.exit(1)
-'''
+
     # Resolve command line arguments
     try:
 
