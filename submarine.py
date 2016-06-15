@@ -80,7 +80,7 @@ def findFile(target):
             if target in name:  # Found a file for my target
                 if ".lst" in name:  # Found a list file
                     target_files.append(file)
-    print(colors.OKBLUE + "[+] Found existing recon-ng output: " + colors.ENDC + target_files)
+    print(colors.OKBLUE + "[+] Found existing recon-ng output for this target." + colors.ENDC)
     return target_files
 
 
@@ -112,7 +112,6 @@ def updateMaster(new_file, target):
     subprocess.call(merge_cmd, shell=True)  # Put the unique list back into master
     subprocess.call(rm_cmd, shell=True)  # Remove that temporary file
 
-    # TODO: Filter out duplicates, ensure unique entries only
     print("[*] Master List Updated for %s" % target)
 
 
@@ -170,6 +169,10 @@ def main():
     ###################
     # Main Call Block #
     ###################
+    # Call subbrute.py - This is launched first, if selected, since it takes FO-EVAH
+    if args.s or args.a:
+        subbrute(target)
+
     # Call enumall.sh
     if args.e or args.a:
         enumall(target)
@@ -185,21 +188,21 @@ def main():
         alt_names = []
         target_ips = resolveIP(target)
         for ip in target_ips:
+            print(color.OKBLUE + ("[+] Target has IP %s.. Checking the cert on that IP" % ip) + color.ENDC)
             alt_names.append(getCertAltNames(ip))
 
         # Put alt names into temp file and then merge into the Master
         # TODO: This should really move to the getSubAltName() function to keep organized by functionality
-        subprocess.call("touch temp.txt", shell=True)
-        with open('temp.txt', 'w') as f:
-            for item in alt_names:
-                f.write(''.join(item))
-                f.write("\n")
-        updateMaster('temp.txt', target)
-        subprocess.call("rm temp.txt", shell=True)
-
-    # Call subbrute.py
-    if args.s or args.a:
-        subbrute(target)
+        if alt_names:
+            subprocess.call("touch temp.txt", shell=True)
+            with open('temp.txt', 'w') as f:
+                for item in alt_names:
+                    f.write(''.join(item))
+                    f.write("\n")
+            updateMaster('temp.txt', target)
+            subprocess.call("rm temp.txt", shell=True)
+        else:
+            print("[-] No AltNames to write.")
 
 
 def enumall(target):
@@ -215,8 +218,8 @@ def enumall(target):
     enum_p.communicate()
 
     # Begin file processing by grabbing the new output
-    cmd = ("mv /usr/share/recon-ng/*.lst %s/" % target)  # Just build the command...
-    subprocess.call(cmd, shell=True)  # Move any new .lst files into current directory
+    mv_cmd = ("mv /usr/share/recon-ng/*%s*.lst %s/" % (target, target))  # Just build the command...
+    subprocess.call(mv_cmd, shell=True)  # Move any new .lst files containing [target] into current directory
     files = findFile(target)  # Get all target-relevant .lst files
 
     latest = 1465820000.0  # Establish a base time for comparison.  Arbitrary old time.
@@ -239,7 +242,6 @@ def enumall(target):
 
         if diff_out:
             print(color.OKGREEN + "[+] There are new entries!" + color.ENDC)
-            print("I changed the next line 189...does it work?")
             merge_cmd = ("cat %s/%s >> %s/%s" % (target, files[0], target, files[1]))
             merge_p = subprocess.Popen(merge_cmd, shell=True)  # Create single appended file
             merge_p.communicate()
@@ -274,29 +276,33 @@ def enumall(target):
 def subbrute(target):
     '''
     Uses the subbrute.py script from TheRook to brute force subdomains.
-    This, by far, takes the longest, so we should do it last.
+    This, by far, takes the longest, so we should launch it first, in the background.
 
     :param target:  The target domain
     :return: None
     '''
+    # TODO: If target is specified just as target.com, I'll need to add a www. or http specifier here, temporarily
+    colors = bcolors
     if not os.path.isfile("/opt/SubBrute/subbrute.py"):
-        print("[!] Subbrute.py not found, skipping.")
+        print(colors.FAIL + "[!] Subbrute.py not found." + colors.ENDC)
     else:
-        print("[*] Beginning subbrute method...This'll take awhile")
+        print(colors.OKBLUE + "[*] Beginning subbrute method...This'll take awhile" + colors.ENDC)
 
         the_log = ("%s/subbrute_log.txt" % target)
 
         i = 0
         with open(the_log, 'w') as f:
-            brute_p = subprocess.call(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f,
+
+            brute_p = subprocess.Popen(["nohup", "python", "/opt/SubBrute/subbrute.py", target], stdout=f,
                                       stderr=subprocess.STDOUT)
-            # brute_p.communicate()
+            print(
+                colors.OKBLUE + ("[*] subbrute.py launched in the background with PID %s" % brute_p.pid) + colors.ENDC)
 
         with open(the_log, 'r') as f:  # Count the resulting discoveries
             for line in f:
                 i += 1
 
-        print("[*] Discovered %d subdomains through subbrute.py" % i)
+        print(colors.OKGREEN + ("[*] Discovered %d subdomains through subbrute.py" % i) + colors.ENDC)
         # After it completes, update the master file
         updateMaster(the_log, target)
 
@@ -304,7 +310,8 @@ def subbrute(target):
 def virusTotal(target):
     '''
     Calls the VirusTotal API to do a subdomain search over the web.  There needs to be
-    an API key for this to work.
+    an API key for this to work.  The key should be placed in a single line text file named
+    virus_total.key in the same directory as submarine.py
 
     Lesson Learned:  requests > urllib
 
@@ -390,7 +397,7 @@ def getCertAltNames(ipAddr, port=443):
             return alt
         except:
             # Failed or nothing found
-            print("[+] No Alt. names present in certificate.")
+            print("[-] No Alt. names present in certificate.")
             return [name]
 
     except:

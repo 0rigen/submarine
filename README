@@ -4,9 +4,7 @@ v1.0
                    |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
              _____/  \__,_| _.__/  _|  _|  _| \__,_| _|    _| _|  _| \___|
 
-Submarine is simply an aggregator for common subdomain enumeration techniques.  In the spirit of automating the more tedious work, this
-script will automatically perform several techniques and aggregate all discovered subdomains into a master list, organized by
-target domain.  Note that none of the techniques are my own, this script just pulls them together for tracking/analysis.
+Submarine is simply an aggregator for common subdomain enumeration techniques.  In the spirit of automating the more tedious work, this script will automatically perform several techniques and aggregate all discovered subdomains into a master list, organized by target domain.  Note that none of the techniques are my own, this script just pulls them together for tracking/analysis.
 
     Techniques Implemented So Far:
      - enumall.sh (jhaddix) / recon-ng (LaNMaSteR53)
@@ -14,9 +12,10 @@ target domain.  Note that none of the techniques are my own, this script just pu
      - VirusTotal API Call
      - SSL Certificate Inspection for Alt. Names (thx to ‎@bbuerhaus for help with this)
 
-This script is best run on a recurring basis to discover changes to the master list.  Recommended implementation is a cronjob that will automatically
-e-mail you or otherwise log when a new subdomain shows up.
-             
+This script is best run on a recurring basis to discover changes to the master list.  Recommended implementation is a cronjob that will automatically e-mail you or otherwise log when a new subdomain shows up.
+
+KEY FILE:  In order for the Virus Total API call to work, a virus_total.key file needs to exist in the same directory as submarine.py.  Insert, on one line, the API key for your account.
+
 Usage: submarine.py [-h] [-t TARGET] [-e] [-s] [-c] [-v] [-a]
 
 optional arguments:
