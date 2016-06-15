@@ -94,4 +94,6 @@ ENV/
 .idea/
 /virus_total.key
 # Ignore my own processing test files
-/**
+/*.com
+/*.net
+/*.org
