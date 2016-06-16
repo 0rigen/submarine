@@ -204,6 +204,11 @@ def main():
         else:
             print("[-] No AltNames to write.")
 
+    # Resolve Hosts
+    print("[+] Resolving discovered hosts")
+    cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
+    subprocess.call(cmd, shell=True)
+
 
 def enumall(target):
     '''
