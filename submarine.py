@@ -117,7 +117,7 @@ def updateMaster(new_file, target):
 
 def main():
     color = bcolors
-
+    """
     # Check that I have the permissions to run (I should be sudo'd or root'd)
     if os.access("/usr/share/recon-ng/", os.W_OK):
         print(color.OKGREEN + "[+] recon-ng found and accessible." + color.ENDC)
@@ -125,7 +125,7 @@ def main():
         print(
             color.FAIL + "[!] You don't have sufficient permissions to run this script OR recon-ng is not installed at /usr/share/recon-ng." + color.ENDC)
         sys.exit(1)
-
+    """
     # Resolve command line arguments
     try:
 
@@ -205,7 +205,7 @@ def main():
             print("[-] No AltNames to write.")
 
     # Resolve Hosts
-    print("[+] Resolving discovered hosts")
+    print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
     cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
     subprocess.call(cmd, shell=True)
 
