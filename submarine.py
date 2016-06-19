@@ -40,6 +40,8 @@ import subprocess
 import sys
 import urllib.parse
 import urllib.request
+import fileinput
+# from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
 import requests
 from OpenSSL import SSL
@@ -63,7 +65,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def findFile(target):
+def find_file(target):
     '''
      Note that b/c of how recon-ng names the files, the oldest file should always be found first,
      which this code depends on.  If this changes, the functions will need to be adjusted.
@@ -84,7 +86,7 @@ def findFile(target):
     return target_files
 
 
-def updateMaster(new_file, target):
+def update_master(target):
     '''
     Updates the master file named [target]_master wihtin the [target]/ directory.
 
@@ -93,26 +95,43 @@ def updateMaster(new_file, target):
     :param target: The target site
     :return: None
     '''
-    # Check to ensure that I don't need to change directories at this point.. I may need to chdir into the target dir
-
+    colors = bcolors
     master_file = ("%s_master.txt" % target)
 
-    if not os.path.isfile(target + "/" + master_file):  # If there is no master list, create one
-        create_master_cmd = ("touch %s/%s_master.txt" % (target, target))
+    # Specify name of the files to input
+    print(colors.OKBLUE + "[-] Searching for new output to add to Master..." + colors.ENDC)
+
+    input_files = []  # List of any discovered files for input
+
+    for root, dirs, files in os.walk('%s/' % target):  # Walk the directory...
+        for file in files:
+            name = os.path.basename(file)
+            if (target in name) or ("log" in name):  # Found a file for my target
+                if "master" not in name:  # Ignore the master files
+                    input_files.append(file)  # Add to list
+
+    print(colors.OKBLUE + "[+] Found new output!  Updating the Master List..." + colors.ENDC)
+
+    # Create master text file, if it doesn't exit
+    # Note that I echo the TLD in order to create a non-empty file, which is necessary for next operations
+    if not os.path.isfile(target + "/" + master_file):
+        create_master_cmd = ("echo '%s' > %s/%s_master.txt" % (target, target, target))
         subprocess.Popen(create_master_cmd, shell=True)
 
-    master_cmd = "cat %s | sort -u >> %s/%s" % (new_file, target, master_file)  # Append into the master
-    subprocess.call(master_cmd, shell=True)
+    # Write new discoveries into the master
+    with open(("%s/%s" % (target, master_file)), 'r+') as m:
+        os.chdir("%s/" % target)
+        existing = m.readlines()
 
-    # Remove Duplicates using intermediate file
-    sort_cmd = "sort %s/%s -u > %s/temp.txt" % (target, master_file, target)
-    merge_cmd = "cat %s/temp.txt > %s/%s" % (target, target, master_file)
-    rm_cmd = "rm %s/temp.txt" % target
-    subprocess.call(sort_cmd, shell=True)  # Call sort with unique flag to filter dupes
-    subprocess.call(merge_cmd, shell=True)  # Put the unique list back into master
-    subprocess.call(rm_cmd, shell=True)  # Remove that temporary file
+        with fileinput.input(files=input_files) as f:
+            for line in f:
+                if line in existing:
+                    break
+                else:
+                    m.write(line)
+    os.chdir("..")
 
-    print("[*] Master List Updated for %s" % target)
+    print(colors.OKGREEN + "[*] Master List Updated for %s" % target + colors.ENDC)
 
 
 def main():
@@ -199,15 +218,18 @@ def main():
                 for item in alt_names:
                     f.write(''.join(item))
                     f.write("\n")
-            updateMaster('temp.txt', target)
+            update_master('temp.txt', target)
             subprocess.call("rm temp.txt", shell=True)
         else:
             print("[-] No AltNames to write.")
 
-    # Resolve Hosts
+    update_master(target)
+
+    # TODO: Resolve Hosts
     print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
     cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
     subprocess.call(cmd, shell=True)
+
 
 
 def enumall(target):
@@ -225,7 +247,7 @@ def enumall(target):
     # Begin file processing by grabbing the new output
     mv_cmd = ("mv /usr/share/recon-ng/*%s*.lst %s/" % (target, target))  # Just build the command...
     subprocess.call(mv_cmd, shell=True)  # Move any new .lst files containing [target] into current directory
-    files = findFile(target)  # Get all target-relevant .lst files
+    files = find_file(target)  # Get all target-relevant .lst files
 
     latest = 1465820000.0  # Establish a base time for comparison.  Arbitrary old time.
 
@@ -250,8 +272,8 @@ def enumall(target):
             merge_cmd = ("cat %s/%s >> %s/%s" % (target, files[0], target, files[1]))
             merge_p = subprocess.Popen(merge_cmd, shell=True)  # Create single appended file
             merge_p.communicate()
-            full_path = "%s/%s" % (target, files[1])
-            updateMaster(full_path, target)  # Update the master file
+            # full_path = "%s/%s" % (target, files[1])
+            #update_master(full_path, target)  # Update the master file
 
         elif not diff_out:
             print(color.OKBLUE + "[+] No new entries... how boring!" + color.ENDC)
@@ -260,8 +282,8 @@ def enumall(target):
         print(
             color.OKBLUE + "[+] One file found - Either you're re-running this too soon, or this is a new target." + color.ENDC)
         full_path = "%s/%s" % (target, files[0])
-        updateMaster(full_path,
-                     target)  # Send the single file to updateMaster in order to create the Master from this source
+        # update_master(full_path,
+        #              target)  # Send the single file to updateMaster in order to create the Master from this source
 
     else:
         print(
@@ -309,7 +331,7 @@ def subbrute(target):
 
         print(colors.OKGREEN + ("[*] Discovered %d subdomains through subbrute.py" % i) + colors.ENDC)
         # After it completes, update the master file
-        updateMaster(the_log, target)
+        #update_master(the_log, target)
 
 
 def virusTotal(target):
@@ -355,7 +377,7 @@ def virusTotal(target):
             f.write("\n")
     print(colors.OKBLUE + ("[*] %d subdomains discovered through VirusTotal API" % i) + colors.ENDC)
     # Add anything we discovered to the master list
-    updateMaster(the_log, target)
+    #update_master(the_log, target)
 
 
 ###########################################################################
