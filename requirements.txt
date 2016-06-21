@@ -7,9 +7,11 @@ idna==2.1
 ndg-httpsclient==0.4.1
 pg8000==1.10.5
 Pillow==3.2.0
+psycopg2==2.6.1
 pyasn1==0.1.9
 pycparser==2.14
 pyOpenSSL==16.0.0
 requests==2.10.0
 six==1.10.0
+suds-jurko==0.6
 tornado==4.3
