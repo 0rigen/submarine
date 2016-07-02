@@ -52,3 +52,7 @@ in a file called "[target]_master.txt" within that directory, along with other w
 
 Near-term To Do:
 - Check subbrute.py results against the wordlist I used - sometimes it returns ALL valid, whih is B.S.  Check for that and abort if it happens
+
+
+Setup Note:
+If Google search starts coughing up Captchas, which is problematic for submarine, comment out the Google_web search in enumall.sh and just do the google_api search modules instead.
