@@ -218,7 +218,7 @@ def main():
                 for item in alt_names:
                     f.write(''.join(item))
                     f.write("\n")
-            update_master('temp.txt', target)
+            update_master(target)
             subprocess.call("rm temp.txt", shell=True)
         else:
             print("[-] No AltNames to write.")
