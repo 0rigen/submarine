@@ -88,7 +88,7 @@ def find_file(target):
 
 def update_master(target):
     '''
-    Updates the master file named [target]_master wihtin the [target]/ directory.
+    Updates the master file named [target]_master within the [target]/ directory.
 
     :param new_file: The consolidated list of subdomains to add to the master record.  Parameter
         must be the full path as in "target.com/new_target_file.txt"
