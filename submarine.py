@@ -216,7 +216,7 @@ def main():
             subprocess.call("touch temp.txt", shell=True)
             with open('temp.txt', 'w') as f:
                 for item in alt_names:
-                    f.write(''.join(item))
+                    f.write(str(item))
                     f.write("\n")
             update_master(target)
             subprocess.call("rm temp.txt", shell=True)
@@ -226,9 +226,9 @@ def main():
     update_master(target)
 
     # TODO: Resolve Hosts
-    print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
-    cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
-    subprocess.call(cmd, shell=True)
+    # print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
+    # cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
+    # subprocess.call(cmd, shell=True)
 
 
 
@@ -360,22 +360,26 @@ def virusTotal(target):
     parameters = {"domain": target, "apikey": key}
     response = requests.get('%s?%s' % (url, urllib.parse.urlencode(parameters))).json()  # Read the response
 
-    # Access and save the "subdomains" field, that's all we want
-    subs = response['subdomains']
+    # Access and save the "subdomains" field; that's all we want
+    try:
+        subs = response['subdomains']
 
-    the_log = ("%s/virustotal_log.txt" % target)
+        the_log = ("%s/virustotal_log.txt" % target)
 
-    if not os.path.isfile("%s/virustotal_log.txt"):  # If the log doesn't exist... create it
-        subprocess.call(["touch", the_log])
+        if not os.path.isfile("%s/virustotal_log.txt"):  # If the log doesn't exist... create it
+            subprocess.call(["touch", the_log])
 
-    # Write the subs to the file logi
-    i = 0
-    with open(the_log, 'w') as f:
-        for item in subs:
-            f.write(item)
-            i += 1
-            f.write("\n")
-    print(colors.OKBLUE + ("[*] %d subdomains discovered through VirusTotal API" % i) + colors.ENDC)
+        # Write the subs to the file logi
+        i = 0
+        with open(the_log, 'w') as f:
+            for item in subs:
+                f.write(item)
+                i += 1
+                f.write("\n")
+
+    except KeyError:
+        print(bcolors.OKBLUE + "[*] No certificate subdomains discovered." + bcolors.ENDC)
+
     # Add anything we discovered to the master list
     #update_master(the_log, target)
 

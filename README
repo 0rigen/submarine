@@ -15,6 +15,7 @@ Submarine is simply an aggregator for common subdomain enumeration techniques.  
 This script is best run on a recurring basis to discover changes to the master list.  Recommended implementation is a cronjob that will automatically e-mail you or otherwise log when a new subdomain shows up.
 
 INSTALLATION:
+*** NOTE: Submarine is Python 3 only ***
  - Cryptography Dependencies: sudo apt-get install build-essential libssl-dev libffi-dev python-dev
  - Libraries: pip install -r requirements.txt
  - Key File:  In order for the Virus Total API call to work, a virus_total.key file needs to exist in the same directory as submarine.py.  Insert, on one line, the API key for your account.
