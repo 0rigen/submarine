@@ -135,6 +135,7 @@ def update_master(target):
 
 
 def parse_args():
+    color = bcolors
     try:
 
         # Get Opts
@@ -158,6 +159,7 @@ def parse_args():
 
 
 def print_banner():
+    color = bcolors
     print('''
            ___|          |                             _)
          \___ \\   |   |  __ \\   __ `__ \\    _` |   __|  |  __ \\    _ \\
