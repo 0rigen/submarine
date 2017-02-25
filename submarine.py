@@ -134,18 +134,7 @@ def update_master(target):
     print(colors.OKGREEN + "[*] Master List Updated for %s" % target + colors.ENDC)
 
 
-def main():
-    color = bcolors
-    """
-    # Check that I have the permissions to run (I should be sudo'd or root'd)
-    if os.access("/usr/share/recon-ng/", os.W_OK):
-        print(color.OKGREEN + "[+] recon-ng found and accessible." + color.ENDC)
-    else:
-        print(
-            color.FAIL + "[!] You don't have sufficient permissions to run this script OR recon-ng is not installed at /usr/share/recon-ng." + color.ENDC)
-        sys.exit(1)
-    """
-    # Resolve command line arguments
+def parse_args():
     try:
 
         # Get Opts
@@ -163,72 +152,90 @@ def main():
             print(color.FAIL + "[!] Bro, you gotta choose at least one enumeration technique!" + color.ENDC)
             sys.exit(2)
 
-        print('''
-               ___|          |                             _)
-             \___ \\   |   |  __ \\   __ `__ \\    _` |   __|  |  __ \\    _ \\
-                   |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
-             _____/  \\__,_| _.__/  _|  _|  _| \\__,_| _|    _| _|  _| \\___|
-        ''')
-        print(color.OKGREEN + ("[+] Targeting %s" % target) + color.ENDC)
     except:
         print(color.FAIL + "[!] Error parsing arguments!" + color.ENDC)
         sys.exit(2)
 
-    # Check to see if a folder already exists for that target
-    if os.path.exists("%s/" % target):  # It does
-        print(color.OKGREEN + "[+] I already have data for this target; files will be updated." + color.ENDC)
-    else:  # It doesn't
-        print(color.OKGREEN + "[+] New Target!  Creating a home for the data..." + color.ENDC)
-        try:
-            subprocess.call(["mkdir", target])  # Create it
-        except:
-            print(color.FAIL + "[!] Something went wrong creating the directory.  Permissions?" + color.ENDC)
-            sys.exit(1)
 
-    ###################
-    # Main Call Block #
-    ###################
-    # Call subbrute.py - This is launched first, if selected, since it takes FO-EVAH
-    if args.s or args.a:
-        subbrute(target)
+def print_banner():
+    print('''
+           ___|          |                             _)
+         \___ \\   |   |  __ \\   __ `__ \\    _` |   __|  |  __ \\    _ \\
+               |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
+         _____/  \\__,_| _.__/  _|  _|  _| \\__,_| _|    _| _|  _| \\___|
+    ''')
+    print(color.OKGREEN + ("[+] Targeting %s" % target) + color.ENDC)
 
-    # Call enumall.sh
-    if args.e or args.a:
-        enumall(target)
-        subprocess.call("rm *.resource", shell=True)  # Get rid of the generated .resource files
-        print("[+] Resource Files Removed.  Operations Complete.  Enjoy!")
 
-    # Call VirusTotal API
-    if args.v or args.a:
-        virusTotal(target)
+def main():
+    color = bcolors
 
-    # Inspect Certs of target
-    if args.c or args.a:
-        alt_names = []
-        target_ips = resolveIP(target)
-        for ip in target_ips:
-            print(color.OKBLUE + ("[+] Target has IP %s.. Checking the cert on that IP" % ip) + color.ENDC)
-            alt_names.append(getCertAltNames(ip))
+    # Check that I have the permissions to run (I should be sudo'd or root'd)
+    if not os.access("/usr/share/recon-ng/", os.W_OK):
+        print(
+            color.FAIL + "[!] You don't have sufficient permissions to run this script OR recon-ng is not installed at /usr/share/recon-ng." + color.ENDC)
+        sys.exit(1)
+    else:
+        print(color.OKGREEN + "[+] recon-ng found and accessible." + color.ENDC)
 
-        # Put alt names into temp file and then merge into the Master
-        # TODO: This should really move to the getSubAltName() function to keep organized by functionality
-        if alt_names:
-            subprocess.call("touch temp.txt", shell=True)
-            with open('temp.txt', 'w') as f:
-                for item in alt_names:
-                    f.write(str(item))
-                    f.write("\n")
-            update_master(target)
-            subprocess.call("rm temp.txt", shell=True)
-        else:
-            print("[-] No AltNames to write.")
+        parse_args()
+        print_banner()
 
-    update_master(target)
+        # Check to see if a folder already exists for that target
+        if os.path.exists("%s/" % target):  # It does
+            print(color.OKGREEN + "[+] I already have data for this target; files will be updated." + color.ENDC)
+        else:  # It doesn't
+            print(color.OKGREEN + "[+] New Target!  Creating a home for the data..." + color.ENDC)
+            try:
+                subprocess.call(["mkdir", target])  # Create it
+            except:
+                print(color.FAIL + "[!] Something went wrong creating the directory.  Permissions?" + color.ENDC)
+                sys.exit(1)
 
-    # TODO: Resolve Hosts
-    # print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
-    # cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
-    # subprocess.call(cmd, shell=True)
+        ###################
+        # Main Call Block #
+        ###################
+        # Call subbrute.py - This is launched first, if selected, since it takes FO-EVAH
+        if args.s or args.a:
+            subbrute(target)
+
+        # Call enumall.sh
+        if args.e or args.a:
+            enumall(target)
+            subprocess.call("rm *.resource", shell=True)  # Get rid of the generated .resource files
+            print("[+] Resource Files Removed.  Operations Complete.  Enjoy!")
+
+        # Call VirusTotal API
+        if args.v or args.a:
+            virusTotal(target)
+
+        # Inspect Certs of target
+        if args.c or args.a:
+            alt_names = []
+            target_ips = resolveIP(target)
+            for ip in target_ips:
+                print(color.OKBLUE + ("[+] Target has IP %s.. Checking the cert on that IP" % ip) + color.ENDC)
+                alt_names.append(getCertAltNames(ip))
+
+            # Put alt names into temp file and then merge into the Master
+            # TODO: This should really move to the getSubAltName() function to keep organized by functionality
+            if alt_names:
+                subprocess.call("touch temp.txt", shell=True)
+                with open('temp.txt', 'w') as f:
+                    for item in alt_names:
+                        f.write(str(item))
+                        f.write("\n")
+                update_master(target)
+                subprocess.call("rm temp.txt", shell=True)
+            else:
+                print("[-] No AltNames to write.")
+
+        update_master(target)
+
+        # TODO: Resolve Hosts
+        # print(color.OKBLUE + "[+] Resolving discovered hosts" + color.ENDC)
+        # cmd = "python3 resolver.py %s/%s_master.txt %s/%s_IP.txt" % (target, target, target, target)
+        # subprocess.call(cmd, shell=True)
 
 
 
