@@ -134,41 +134,6 @@ def update_master(target):
     print(colors.OKGREEN + "[*] Master List Updated for %s" % target + colors.ENDC)
 
 
-def parse_args():
-    color = bcolors
-    try:
-
-        # Get Opts
-        parser = argparse.ArgumentParser()
-        parser.add_argument("-t", "--target", help="The target domain")
-        parser.add_argument("-e", help="Perform enumall.sh enumeration via recon-ng", action="store_true")
-        parser.add_argument("-s", help="Perform SubBrute.py enumeration", action="store_true")
-        parser.add_argument("-c", help="Perform SSL Certificate Alt. name enumeration", action="store_true")
-        parser.add_argument("-v", help="Perform VirusTotal API Enumeration", action="store_true")
-        parser.add_argument("-a", help="Perform ALL checks.", action="store_true")
-        args = parser.parse_args()
-        target = args.target
-
-        if args.a == False and args.v == False and args.c == False and args.s == False and args.e == False:
-            print(color.FAIL + "[!] Bro, you gotta choose at least one enumeration technique!" + color.ENDC)
-            sys.exit(2)
-
-    except:
-        print(color.FAIL + "[!] Error parsing arguments!" + color.ENDC)
-        sys.exit(2)
-
-
-def print_banner():
-    color = bcolors
-    print('''
-           ___|          |                             _)
-         \___ \\   |   |  __ \\   __ `__ \\    _` |   __|  |  __ \\    _ \\
-               |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
-         _____/  \\__,_| _.__/  _|  _|  _| \\__,_| _|    _| _|  _| \\___|
-    ''')
-    print(color.OKGREEN + ("[+] Targeting %s" % target) + color.ENDC)
-
-
 def main():
     color = bcolors
 
@@ -180,8 +145,34 @@ def main():
     else:
         print(color.OKGREEN + "[+] recon-ng found and accessible." + color.ENDC)
 
-        parse_args()
-        print_banner()
+        try:
+
+            # Get Opts
+            parser = argparse.ArgumentParser()
+            parser.add_argument("-t", "--target", help="The target domain")
+            parser.add_argument("-e", help="Perform enumall.sh enumeration via recon-ng", action="store_true")
+            parser.add_argument("-s", help="Perform SubBrute.py enumeration", action="store_true")
+            parser.add_argument("-c", help="Perform SSL Certificate Alt. name enumeration", action="store_true")
+            parser.add_argument("-v", help="Perform VirusTotal API Enumeration", action="store_true")
+            parser.add_argument("-a", help="Perform ALL checks.", action="store_true")
+            args = parser.parse_args()
+            target = args.target
+
+            if args.a == False and args.v == False and args.c == False and args.s == False and args.e == False:
+                print(color.FAIL + "[!] Bro, you gotta choose at least one enumeration technique!" + color.ENDC)
+                sys.exit(2)
+
+        except:
+            print(color.FAIL + "[!] Error parsing arguments!" + color.ENDC)
+            sys.exit(2)
+
+        print('''
+               ___|          |                             _)
+             \___ \\   |   |  __ \\   __ `__ \\    _` |   __|  |  __ \\    _ \\
+                   |  |   |  |   |  |   |   |  (   |  |     |  |   |   __/
+             _____/  \\__,_| _.__/  _|  _|  _| \\__,_| _|    _| _|  _| \\___|
+        ''')
+        print(color.OKGREEN + ("[+] Targeting %s" % target) + color.ENDC)
 
         # Check to see if a folder already exists for that target
         if os.path.exists("%s/" % target):  # It does
